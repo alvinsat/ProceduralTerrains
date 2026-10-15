@@ -152,6 +152,17 @@ heightmap import, biome painting, river tools, and procedural prop painting.
 The Export panel provides quick screenshots and heightmaps, plus production
 presets for:
 
+- **CRYENGINE 5.7 Heightmap** — one square terrain as a 16-bit little-endian RAW
+  heightmap, with a README and JSON sidecar describing the required map
+  dimensions, `MaxHeight`, and world size. The CryEngine Editor importer requires
+  the target level dimensions and `MaxHeight` to match; it does not resize RAW
+  files or change level settings. The archive's `heightmap.raw` must be extracted
+  before importing it through Sandbox's Terrain > Import Heightmap command. You
+  can also run `manipulate.py` in the Editor; it opens a confirmation and the
+  native file picker, where you select the extracted RAW. The current Python
+  terrain API does not accept a filepath, so this flow is not headless. The
+  RAW orientation conversion is inferred from Editor source; verify it with an
+  asymmetric test terrain before production use.
 - Unity Terrain
 - Unreal Landscape
 - Godot Terrain3D

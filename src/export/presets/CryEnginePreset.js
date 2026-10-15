@@ -1,0 +1,27 @@
+export const CryEnginePreset = {
+  id: 'cryengine',
+  label: 'CRYENGINE 5.7 Heightmap',
+  description: 'Little-endian 16-bit RAW heightmap and import settings for one square CryEngine terrain.',
+  defaults: {
+    format: 'glb',
+    meshRes: '256',
+    texRes: '512',
+    heightRes: '256',
+    heightmapVertexGrid: true,
+    includeMesh: false,
+    bakeColor: false,
+    bakeNormal: false,
+    exportHeightmap: true,
+    exportSplat: false,
+    exportCollision: false,
+    exportWater: false,
+    exportPreset: false,
+    exportTileMode: 'merged',
+    cryEngineMaxHeight: '1024',
+  },
+  layout: {
+    root: 'CryEngine',
+    heightmapRawPath: 'CryEngine/heightmap.raw',
+    paths: {},
+  },
+};

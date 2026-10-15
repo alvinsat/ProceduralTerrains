@@ -3,6 +3,7 @@ import { estimateExport, largeExportMessage } from './ExportDiagnostics.js';
 const MAX_TEXTURE_RESOLUTION = 4096;
 const MAX_MESH_RESOLUTION = 1024;
 const UNITY_HEIGHTFIELD_RESOLUTIONS = [513, 1025, 2049, 4097];
+const CRYENGINE_HEIGHTFIELD_RESOLUTIONS = [128, 256, 512, 1024, 2048, 4096];
 
 export function validateExport(options = {}, context = {}) {
   const checks = [];
@@ -10,8 +11,27 @@ export function validateExport(options = {}, context = {}) {
   const texRes = Number(options.texRes) || 0;
   const meshRes = Number(options.meshRes) || 0;
   const runtimeTerrainExport = options.runtimeDocumentPath != null;
+  const cryEngineExport = options.exportPresetId === 'cryengine';
   const targetLabel = options.exportPresetId === 'blender' ? 'Blender' : 'Unity';
   const heightRes = Number(options.heightRes) || 0;
+
+  if (cryEngineExport) {
+    if (context.worldMode !== 'studio') add('error', 'CryEngine RAW export supports Tile mode only.');
+    if (context.tileAssemblyShape === 'circle') add('error', 'CryEngine RAW export requires a square terrain.');
+    if ((context.tiles?.length ?? 1) !== 1) add('error', 'CryEngine RAW export currently supports one terrain tile at a time.');
+    if (!options.exportHeightmap) add('error', 'CryEngine export requires the RAW heightmap.');
+    if (!CRYENGINE_HEIGHTFIELD_RESOLUTIONS.includes(heightRes)) {
+      add('error', `CryEngine RAW grid must be ${CRYENGINE_HEIGHTFIELD_RESOLUTIONS.join(', ')} samples per side.`);
+    } else {
+      add('success', `CryEngine RAW grid ${heightRes} × ${heightRes}; match the target level's heightmap dimensions.`);
+    }
+    const cryEngineMaxHeight = Number(options.cryEngineMaxHeight);
+    if (!Number.isFinite(cryEngineMaxHeight) || cryEngineMaxHeight <= 0) {
+      add('error', 'CryEngine MaxHeight must be a finite positive number.');
+    } else {
+      add('success', `CryEngine MaxHeight ${cryEngineMaxHeight} m; match the target level setting.`);
+    }
+  }
 
   if (runtimeTerrainExport && context.worldMode !== 'studio') {
     add('error', `${targetLabel} runtime document v1 supports Tile mode only.`);

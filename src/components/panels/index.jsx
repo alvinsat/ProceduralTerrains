@@ -898,6 +898,21 @@ const UNITY_HEIGHT_OPTIONS = [
   { value: '2049', label: '2049 × 2049' },
   { value: '4097', label: '4097 × 4097 (Very large)' },
 ];
+const CRYENGINE_HEIGHT_OPTIONS = [
+  { value: '128', label: '128 × 128' },
+  { value: '256', label: '256 × 256 (Sample level)' },
+  { value: '512', label: '512 × 512' },
+  { value: '1024', label: '1024 × 1024' },
+  { value: '2048', label: '2048 × 2048' },
+  { value: '4096', label: '4096 × 4096' },
+];
+const CRYENGINE_MAX_HEIGHT_OPTIONS = [
+  { value: '256', label: '256 m' },
+  { value: '512', label: '512 m' },
+  { value: '1024', label: '1024 m (Sample level)' },
+  { value: '2048', label: '2048 m' },
+  { value: '4096', label: '4096 m' },
+];
 const COLL_OPTIONS = [
   { value: '32', label: '32 × 32' }, { value: '64', label: '64 × 64' },
   { value: '128', label: '128 × 128 (Recommended)' }, { value: '256', label: '256 × 256' },
@@ -1011,8 +1026,21 @@ function ExportPanel({ ctx }) {
 
       <ControlSection id="export-assets" title={translateText("Additional Assets")} defaultOpen={false} settingId="export.section.assets">
         <ToggleRow label={translateText("Export Heightmap")} value={opt.exportHeightmap} onChange={(v) => set('exportHeightmap', v)} />
-        {opt.exportHeightmap && opt.runtimeDocumentPath && (
-          <SelectRow label={translateText(`${opt.exportPresetId === 'blender' ? 'Blender' : 'Unity'} Height Grid`)} value={opt.heightRes} options={UNITY_HEIGHT_OPTIONS} onChange={(v) => set('heightRes', v)} />
+        {opt.exportHeightmap && (opt.runtimeDocumentPath || opt.exportPresetId === 'cryengine') && (
+          <SelectRow
+            label={translateText(opt.exportPresetId === 'cryengine' ? 'CryEngine Heightmap Dimensions' : `${opt.exportPresetId === 'blender' ? 'Blender' : 'Unity'} Height Grid`)}
+            value={opt.heightRes}
+            options={opt.exportPresetId === 'cryengine' ? CRYENGINE_HEIGHT_OPTIONS : UNITY_HEIGHT_OPTIONS}
+            onChange={(v) => set('heightRes', v)}
+          />
+        )}
+        {opt.exportHeightmap && opt.exportPresetId === 'cryengine' && (
+          <SelectRow
+            label={translateText('CryEngine MaxHeight')}
+            value={opt.cryEngineMaxHeight}
+            options={CRYENGINE_MAX_HEIGHT_OPTIONS}
+            onChange={(v) => set('cryEngineMaxHeight', v)}
+          />
         )}
         {opt.exportHeightmap && (
           <ToggleRow label={translateText("Include Biome Splat Map")} value={opt.exportSplat} onChange={(v) => set('exportSplat', v)} />

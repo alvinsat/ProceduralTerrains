@@ -62,6 +62,42 @@ describe('production export presets', () => {
     expect(files['Blender/terrain.json']).toBeUndefined();
   });
 
+  it('sets CryEngine RAW defaults and writes exact import requirements', () => {
+    const options = applyExportPreset({}, 'cryengine');
+    expect(options).toMatchObject({
+      exportHeightmap: true,
+      heightRes: '256',
+      heightmapVertexGrid: true,
+      heightmapRawPath: 'CryEngine/heightmap.raw',
+      cryEngineMaxHeight: '1024',
+      runtimeDocumentPath: null,
+    });
+
+    const files = createProductionFiles(options, {
+      seed: 7, boardSize: 512, heightScale: 560, seaLevel: 100,
+    });
+    const metadata = JSON.parse(new TextDecoder().decode(files['CryEngine/terrain.json']));
+    const readme = new TextDecoder().decode(files['CryEngine/README.txt']);
+    expect(metadata).toMatchObject({
+      engine: 'CRYENGINE 5.7 Sandbox',
+      heightmap: {
+        path: 'CryEngine/heightmap.raw',
+        width: 256,
+        height: 256,
+        encoding: 'unsigned 16-bit integer',
+        byteOrder: 'little-endian',
+        heightScaleMeters: 1024,
+        sourceHeightRangeMeters: 560,
+      },
+      terrain: { worldSizeMeters: 512, unitSizeMeters: 2 },
+    });
+    expect(readme).toContain('Required heightmap dimensions: 256 x 256.');
+    expect(readme).toContain('Required terrain MaxHeight: 1024 m.');
+    expect(readme).toContain('verify it with an asymmetric test terrain before production use.');
+    expect(readme).toContain('select the extracted RAW file in the native file picker.');
+    expect(readme).toContain('does not support supplying the RAW path directly');
+  });
+
   it('exports the complete unsigned editor seed range to Unity', () => {
     const options = applyExportPreset({}, 'unity');
     const files = createProductionFiles(options, {
@@ -109,5 +145,15 @@ describe('production export presets', () => {
     });
     expect(hasExportErrors(checks)).toBe(true);
     expect(checks.some((check) => check.message.includes('RAW heightfield'))).toBe(true);
+  });
+
+  it('rejects CryEngine export for worlds and layouts the RAW terrain importer cannot represent', () => {
+    const options = applyExportPreset({}, 'cryengine');
+    expect(hasExportErrors(validateExport(options, {
+      worldMode: 'planet', boardSize: 512, tileAssemblyShape: 'square', tiles: [{ cx: 0, cz: 0 }],
+    }))).toBe(true);
+    expect(hasExportErrors(validateExport(options, {
+      worldMode: 'studio', boardSize: 512, tileAssemblyShape: 'square', tiles: [{ cx: 0, cz: 0 }, { cx: 1, cz: 0 }],
+    }))).toBe(true);
   });
 });

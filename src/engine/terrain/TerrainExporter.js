@@ -27,6 +27,7 @@ import { generateStackGLSL } from './noise/noiseStackCodegen.js';
 import { defaultLegacyStack } from './noise/NoiseStack.js';
 import {
   decodePackedHeight01,
+  encodeCryEngineRaw16FromPackedPixels,
   encodeUnityRaw16FromPackedPixels,
 } from '../../export/runtime/HeightfieldEncoding.js';
 import { saveBlob } from '../../platform/DesktopBridge.js';
@@ -351,7 +352,15 @@ export class TerrainExporter {
       let raw16 = null;
       if (options.heightmapRawPath && heightmapVertexGrid) {
         const vertexPixels = await renderHeightPixels(ox, oz, sx, sz, heightRes, true);
-        raw16 = encodeUnityRaw16FromPackedPixels(vertexPixels, heightRes, heightRes);
+        raw16 = options.exportPresetId === 'cryengine'
+          ? encodeCryEngineRaw16FromPackedPixels(
+            vertexPixels,
+            heightRes,
+            heightRes,
+            heightScale,
+            Number(options.cryEngineMaxHeight),
+          )
+          : encodeUnityRaw16FromPackedPixels(vertexPixels, heightRes, heightRes);
       } else if (options.heightmapRawPath) {
         // Preserve the existing engine-preset RAW contract outside Unity:
         // texture-sized samples with the same top-down row order as the PNG.

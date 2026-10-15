@@ -8,6 +8,7 @@ import {
   validateRuntimeTerrainDocument,
 } from '../src/export/runtime/RuntimeTerrainValidator.js';
 import {
+  encodeCryEngineRaw16FromPackedPixels,
   encodeUnityRaw16FromPackedPixels,
   vertexGridUv,
   vertexGridWorldCoordinate,
@@ -217,5 +218,31 @@ describe('Unity RAW heightfield encoding', () => {
     const rightEdge = vertexGridWorldCoordinate(1000, 1000, 0, 513);
     expect(leftEdge).toBe(500);
     expect(rightEdge).toBe(leftEdge);
+  });
+});
+
+describe('CryEngine RAW heightfield encoding', () => {
+  it('writes 16-bit little-endian samples at the target MaxHeight in CryEngine row order', () => {
+    const pixels = new Uint8Array([
+      0, 0, 0, 255,
+      64, 0, 0, 255,
+      128, 0, 0, 255,
+      255, 255, 255, 255,
+    ]);
+    const raw = encodeCryEngineRaw16FromPackedPixels(pixels, 2, 2, 512, 1024);
+    const view = new DataView(raw.buffer);
+
+    expect(raw).toHaveLength(8);
+    expect(view.getUint16(0, true)).toBe(16384);
+    expect(view.getUint16(2, true)).toBe(32768);
+    expect(view.getUint16(4, true)).toBe(0);
+    expect(view.getUint16(6, true)).toBe(8192);
+  });
+
+  it('rejects non-square grids and invalid vertical scales', () => {
+    expect(() => encodeCryEngineRaw16FromPackedPixels(new Uint8Array(16), 2, 2, 0, 1024))
+      .toThrow('Source and CryEngine height scales');
+    expect(() => encodeCryEngineRaw16FromPackedPixels(new Uint8Array(24), 3, 2, 512, 1024))
+      .toThrow('square grids');
   });
 });
